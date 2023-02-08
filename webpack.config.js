@@ -31,7 +31,7 @@ const config = {
         loader: 'babel-loader',
       },
       {
-        test: /\.css$/i,
+        test: /\.scss$/i,
         use: [stylesHandler, 'css-loader', 'sass-loader', 'postcss-loader'],
       },
       {
