@@ -16,6 +16,7 @@ const config = {
   devServer: {
     open: true,
     host: 'localhost',
+    liveReload: true,
   },
   plugins: [
     new HtmlWebpackPlugin({
@@ -27,18 +28,22 @@ const config = {
   module: {
     rules: [
       {
-        test: /\.(js|jsx)$/i,
-        loader: 'babel-loader',
-      },
-      {
-        test: /\.scss$/i,
-        use: [stylesHandler, 'css-loader', 'sass-loader', 'postcss-loader'],
+        test: /\.(js)$/i,
+        exclude: /node_modules/,
+        use: ['babel-loader'],
       },
       {
         test: /\.(eot|svg|ttf|woff|woff2|png|jpg|gif)$/i,
         type: 'asset',
       },
+      {
+        test: /\.scss$/,
+        use: [stylesHandler, 'css-loader', 'sass-loader', 'postcss-loader'],
+      },
     ],
+  },
+  resolve: {
+    extensions: ['*', '.js'],
   },
 };
 
