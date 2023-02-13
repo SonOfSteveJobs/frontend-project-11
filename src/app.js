@@ -6,13 +6,19 @@ import render from './view.js';
 
 const validate = (newURL, list) => {
   const schema = yup.string()
+    .trim()
     .url()
-    .notOneOf(list)
-    .trim();
+    .notOneOf(list);
   return schema.validate(newURL);
 };
 
-const getResponse = (url) => axios.get(url);
+const getResponse = (url) => {
+  const allOriginsLink = 'https://allorigins.hexlet.app/get';
+  const preparedURL = new URL(allOriginsLink);
+  preparedURL.searchParams.set('disableCache', 'true');
+  preparedURL.searchParams.set('url', url);
+  return axios.get(preparedURL);
+};
 
 const app = () => {
   const state = {
@@ -29,7 +35,7 @@ const app = () => {
   const elements = {
     form: document.querySelector('form'),
     input: document.querySelector('input'),
-    feedback: document.querySelector('.feedback'),
+    btn: document.querySelector('button[type="submit"]'),
   };
 
   const watchedState = onChange(state, render(state, elements));
@@ -45,15 +51,29 @@ const app = () => {
     validate(state.inputData, feedList)
       .then(() => {
         watchedState.addingRssProcess.state = 'sending';
+        console.log(feedList);
         return getResponse(state.inputData);
       })
-      .then((response) => console.log(response))
+      .then((response) => {
+        console.log(response);
+        feedList.push(state.inputData);
+        watchedState.addingRssProcess.state = 'success';
+        return response.data;
+      })
+      .then((str) => new window.DOMParser().parseFromString(str, 'text/xml'))
+      .then((data) => {
+        const rootTagName = data.documentElement.tagName.toLowerCase();
+        if (rootTagName !== 'rss') {
+          throw new Error('noRSS');
+        }
+      })
       .catch((error) => {
-        console.log(error);
+        watchedState.addingRssProcess.error = error;
         watchedState.addingRssProcess.state = 'failed';
+        console.log(error);
+        console.log(watchedState.addingRssProcess.state);
+        console.log(elements.input.classList);
       });
-
-    console.log('0');
   });
 };
 
