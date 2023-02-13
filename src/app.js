@@ -58,9 +58,9 @@ const app = () => {
         console.log(response);
         feedList.push(state.inputData);
         watchedState.addingRssProcess.state = 'success';
-        return response.data;
+        return response.data.contents;
       })
-      .then((str) => new window.DOMParser().parseFromString(str, 'text/xml'))
+      .then((str) => new DOMParser().parseFromString(str, 'text/xml'))
       .then((data) => {
         const rootTagName = data.documentElement.tagName.toLowerCase();
         if (rootTagName !== 'rss') {
