@@ -10,7 +10,15 @@ const errorHandler = (elements, error) => {
   elements.btn.disabled = false;
 };
 
-const render = (state, elements) => (path, value) => {
+const successHandler = (state, elements, i18nextInstance) => {
+  initState(elements);
+  elements.feedback.textContent = '';
+  elements.feedback.classList.remove('text-danger');
+  elements.feedback.classList.add('text-success');
+  elements.feedback.textContent = i18nextInstance.t('rssAdded');
+};
+
+const render = (state, elements, i18nextInstance) => (path, value) => {
   console.log(path);
   console.log(value);
   switch (path) {
@@ -22,7 +30,7 @@ const render = (state, elements) => (path, value) => {
         errorHandler(elements, state.addingRssProcess.error);
       }
       if (value === 'success') {
-        initState(elements);
+        successHandler(state, elements, i18nextInstance);
       }
       break;
     default:
