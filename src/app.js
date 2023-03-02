@@ -20,15 +20,22 @@ const getResponse = (url) => {
   return axios.get(preparedURL);
 };
 
+const addFeeds = (parsedFeed, link, watchedState) => {
+  watchedState.data.feeds.push({ ...parsedFeed, link });
+};
+
+const addPosts = (posts, watchedState) => {
+  const preparedPosts = posts.map((post) => ({ ...post }));
+  watchedState.data.posts = preparedPosts.concat(watchedState.data.posts);
+};
+
 const app = () => {
   const i18nextInstance = i18next.createInstance();
-  const defaultLanguage = 'ru';
-  i18nextInstance
-    .init({
-      lng: defaultLanguage,
-      debug: false,
-      locales,
-    })
+  i18nextInstance.init({
+    lng: 'ru',
+    debug: true,
+    locales,
+  })
     .then(() => {
       const state = {
         inputData: '',
@@ -38,6 +45,7 @@ const app = () => {
         },
         data: {
           feeds: [],
+          posts: [],
         },
       };
 
@@ -56,6 +64,8 @@ const app = () => {
         input: document.querySelector('input'),
         btn: document.querySelector('button[type="submit"]'),
         feedback: document.querySelector('.feedback'),
+        posts: document.querySelector('.posts'),
+        feeds: document.querySelector('.feeds'),
       };
 
       const watchedState = onChange(state, render(state, elements, i18nextInstance));
@@ -77,6 +87,8 @@ const app = () => {
           .then((response) => {
             console.log(response);
             const parsedRSS = parse(response.data.contents);
+            addFeeds(parsedRSS.feed, state.inputData, watchedState);
+            addPosts(parsedRSS.posts, watchedState);
             console.log(parsedRSS);
             feedList.push(state.inputData);
             watchedState.addingRssProcess.state = 'success';
