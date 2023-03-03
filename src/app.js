@@ -3,6 +3,7 @@ import * as yup from 'yup';
 import onChange from 'on-change';
 import axios from 'axios';
 import i18next from 'i18next';
+import _ from 'lodash';
 import locales from './locales/index.js';
 import parse from './utils/parser.js';
 import render from './view.js';
@@ -27,6 +28,46 @@ const addFeeds = (parsedFeed, link, watchedState) => {
 const addPosts = (posts, watchedState) => {
   const preparedPosts = posts.map((post) => ({ ...post }));
   watchedState.data.posts = preparedPosts.concat(watchedState.data.posts);
+  console.log(watchedState.data.posts);
+};
+
+const updatePosts = (watchedState) => {
+  const handler = () => {
+    const feedLinks = watchedState.data.feeds.map(({ link }) => getResponse(link));
+
+    Promise.allSettled(feedLinks)
+      .then((promises) => {
+        console.log(promises);
+        const postsParsed = promises.filter(({ status }) => status === 'fulfilled').map(({ value }) => {
+          console.log(value.data);
+          try {
+            const parsedData = parse(value.data.contents);
+            console.log(parsedData);
+            return parsedData.posts;
+          } catch (e) {
+            console.log(e);
+            return [];
+          }
+        });
+        const receivedPosts = _.flatten(postsParsed);
+        console.log(receivedPosts);
+        const linkPosts = watchedState.data.posts.map(({ link }) => link);
+        console.log(linkPosts);
+        const newPosts = receivedPosts.filter(({ link }) => !linkPosts.includes(link));
+        console.log(newPosts);
+        if (newPosts.length > 0) {
+          addPosts(newPosts, watchedState);
+        }
+        if (newPosts.length === 0) {
+          console.log('No new posts');
+        }
+      })
+      .catch((console.error))
+      .finally(() => {
+        setTimeout(handler, 5000);
+      });
+  };
+  setTimeout(handler, 5000);
 };
 
 const app = () => {
@@ -81,25 +122,19 @@ const app = () => {
         validate(state.inputData, feedList)
           .then(() => {
             watchedState.addingRssProcess.state = 'sending';
-            console.log(feedList);
             return getResponse(state.inputData);
           })
           .then((response) => {
-            console.log(response);
             const parsedRSS = parse(response.data.contents);
             addFeeds(parsedRSS.feed, state.inputData, watchedState);
             addPosts(parsedRSS.posts, watchedState);
-            console.log(parsedRSS);
             feedList.push(state.inputData);
+            updatePosts(watchedState);
             watchedState.addingRssProcess.state = 'success';
           })
           .catch((error) => {
             watchedState.addingRssProcess.error = error;
             watchedState.addingRssProcess.state = 'failed';
-            console.log(error);
-            console.log(watchedState.addingRssProcess.state);
-            console.log(elements.input.classList);
-            console.log(elements.feedback);
           });
       });
     });

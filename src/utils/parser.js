@@ -1,28 +1,20 @@
-const parse = (contents) => {
-  const xmlDocument = new DOMParser().parseFromString(contents, 'text/xml');
-  console.log(xmlDocument);
-  const tagName = xmlDocument.documentElement.tagName.toLowerCase();
-  if (tagName !== 'rss') {
-    throw new Error('noRSS');
+const parse = (response) => {
+  const parser = new DOMParser();
+  const parsedDom = parser.parseFromString(response, 'application/xml');
+  console.log(parsedDom);
+  if (parsedDom.querySelector('parsererror')) {
+    throw new Error('parsingError');
   }
-
-  const channel = xmlDocument.querySelector('channel');
-  const channelTitle = xmlDocument.querySelector('channel title').textContent;
-  const channelDescription = xmlDocument.querySelector('channel description').textContent;
-  const feed = { title: channelTitle, description: channelDescription };
-
-  const itemElements = channel.getElementsByTagName('item');
-  const posts = [...itemElements].map((item) => {
+  const feedTitle = parsedDom.querySelector('channel > title').textContent;
+  const feedDescription = parsedDom.querySelector('channel > description').textContent;
+  const feed = { title: feedTitle, description: feedDescription };
+  const items = parsedDom.querySelectorAll('item');
+  const posts = [...items].map((item) => {
     const title = item.querySelector('title').textContent;
     const description = item.querySelector('description').textContent;
-    const link = item.querySelector('channel link').textContent;
-    return {
-      title,
-      description,
-      link,
-    };
+    const link = item.querySelector('link').textContent;
+    return { title, description, link };
   });
-
   return { feed, posts };
 };
 

@@ -89,8 +89,6 @@ const successHandler = (state, elements, i18nextInstance) => {
 };
 
 const render = (state, elements, i18nextInstance) => (path, value) => {
-  console.log(path);
-  console.log(value);
   switch (path) {
     case 'addingRssProcess.state':
       if (value === 'sending') {
@@ -102,6 +100,9 @@ const render = (state, elements, i18nextInstance) => (path, value) => {
       if (value === 'success') {
         successHandler(state, elements, i18nextInstance);
       }
+      break;
+    case 'posts':
+      makeContainer('posts', state, elements, i18nextInstance);
       break;
     default:
       break;
